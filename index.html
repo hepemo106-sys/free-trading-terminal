@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Free Trading Terminal – Acciones USA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      background: #0b0e11;
+      color: #eaecef;
+      font-family: monospace;
+    }
+    header {
+      padding: 10px;
+      background: #161a1e;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    input {
+      background: #0b0e11;
+      color: #eaecef;
+      border: 1px solid #2b3139;
+      padding: 6px;
+    }
+    button {
+      background: #1e2329;
+      color: #eaecef;
+      border: 1px solid #2b3139;
+      padding: 6px;
+      cursor: pointer;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      height: calc(100vh - 50px);
+    }
+    .panel {
+      border: 1px solid #2b3139;
+      padding: 5px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <strong>FREE TRADING TERMINAL</strong>
+  <input id="symbol" placeholder="AAPL" />
+  <button onclick="loadSymbol()">Cargar</button>
+</header>
+
+<div class="grid">
+  <div class="panel" id="chart"></div>
+  <div class="panel">
+    <iframe src="https://finviz.com/map.ashx"
+      style="width:100%;height:100%;border:none;"></iframe>
+  </div>
+  <div class="panel">
+    <iframe id="news"
+      src="https://www.tradingview.com/widgetembed/?widgetType=news&symbol=AAPL"
+      style="width:100%;height:100%;border:none;"></iframe>
+  </div>
+  <div class="panel" id="watchlist">
+    <h3>Watchlist</h3>
+    <ul id="list"></ul>
+  </div>
+</div>
+
+<script>
+let currentSymbol = "AAPL";
+
+function loadSymbol() {
+  const s = document.getElementById("symbol").value.toUpperCase();
+  if (!s) return;
+  currentSymbol = s;
+  document.getElementById("chart").innerHTML = `
+    <iframe src="https://www.tradingview.com/widgetembed/?symbol=${s}&interval=D&theme=dark&style=1"
+    style="width:100%;height:100%;border:none;"></iframe>`;
+  document.getElementById("news").src =
+    `https://www.tradingview.com/widgetembed/?widgetType=news&symbol=${s}`;
+  addToWatchlist(s);
+}
+
+function addToWatchlist(symbol) {
+  let list = JSON.parse(localStorage.getItem("watchlist") || "[]");
+  if (!list.includes(symbol)) {
+    list.push(symbol);
+    localStorage.setItem("watchlist", JSON.stringify(list));
+  }
+  renderWatchlist();
+}
+
+function renderWatchlist() {
+  const ul = document.getElementById("list");
+  ul.innerHTML = "";
+  let list = JSON.parse(localStorage.getItem("watchlist") || "[]");
+  list.forEach(s => {
+    const li = document.createElement("li");
+    li.textContent = s;
+    li.onclick = () => {
+      document.getElementById("symbol").value = s;
+      loadSymbol();
+    };
+    ul.appendChild(li);
+  });
+}
+
+renderWatchlist();
+loadSymbol();
+</script>
+
+</body>
+</html>
