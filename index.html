@@ -40,18 +40,6 @@
     h3 {
       margin: 5px 0;
     }
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    li {
-      padding: 4px;
-      cursor: pointer;
-    }
-    li:hover {
-      background: #1e2329;
-    }
   </style>
 </head>
 <body>
@@ -67,11 +55,11 @@
   <!-- GRÁFICO PRINCIPAL (ÚNICO) -->
   <div class="panel" id="chart"></div>
 
-  <!-- HEATMAP DEL MERCADO USA -->
+  <!-- MARKET OVERVIEW (ESTABLE) -->
   <div class="panel">
-    <h3>Market Heatmap</h3>
+    <h3>Market Overview (USA)</h3>
     <iframe
-      src="https://www.tradingview.com/widgetembed/?widgetType=heatmap&market=stock&exchange=US&theme=dark"
+      src="https://www.tradingview.com/widgetembed/?widgetType=market_overview&theme=dark&symbols=%5B%7B%22s%22%3A%22SP%3ASPX%22%7D%2C%7B%22s%22%3A%22NASDAQ%3ANDAQ%22%7D%2C%7B%22s%22%3A%22DJ%3ADJI%22%7D%5D"
       style="width:100%;height:100%;border:none;">
     </iframe>
   </div>
@@ -86,47 +74,15 @@ function loadSymbol(symbolFromClick) {
 
   document.getElementById("symbol").value = s;
 
-  const chartDiv = document.getElementById("chart");
-  chartDiv.innerHTML = `
+  document.getElementById("chart").innerHTML = `
     <iframe
       src="https://www.tradingview.com/widgetembed/?symbol=${s}&interval=D&theme=dark&style=1"
       style="width:100%;height:100%;border:none;">
     </iframe>
   `;
-
-  addToWatchlist(s);
 }
 
-function addToWatchlist(symbol) {
-  let list = JSON.parse(localStorage.getItem("watchlist") || "[]");
-  if (!list.includes(symbol)) {
-    list.push(symbol);
-    localStorage.setItem("watchlist", JSON.stringify(list));
-  }
-  renderWatchlist();
-}
-
-function renderWatchlist() {
-  const existing = document.getElementById("watchlist");
-  if (existing) return;
-
-  const panel = document.createElement("div");
-  panel.className = "panel";
-  panel.id = "watchlist";
-  panel.innerHTML = "<h3>Watchlist</h3><ul id='list'></ul>";
-  document.body.appendChild(panel);
-
-  const ul = document.getElementById("list");
-  let list = JSON.parse(localStorage.getItem("watchlist") || "[]");
-
-  list.forEach(s => {
-    const li = document.createElement("li");
-    li.textContent = s;
-    li.onclick = () => loadSymbol(s);
-    ul.appendChild(li);
-  });
-}
-
+// Carga inicial
 loadSymbol("AAPL");
 </script>
 
