@@ -18,23 +18,18 @@
       align-items: center;
       gap: 10px;
     }
-    input {
+    input, button {
       background: #0b0e11;
       color: #eaecef;
       border: 1px solid #2b3139;
       padding: 6px;
     }
     button {
-      background: #1e2329;
-      color: #eaecef;
-      border: 1px solid #2b3139;
-      padding: 6px;
       cursor: pointer;
     }
     .grid {
       display: grid;
       grid-template-columns: 2fr 1fr;
-      grid-template-rows: 1fr 1fr;
       height: calc(100vh - 50px);
     }
     .panel {
@@ -65,24 +60,8 @@
 </header>
 
 <div class="grid">
-  <!-- GRÁFICO PRINCIPAL -->
+  <!-- GRÁFICO PRINCIPAL (ÚNICO) -->
   <div class="panel" id="chart"></div>
-
-  <!-- HEATMAP -->
-  <div class="panel">
-    <iframe
-      src="https://www.tradingview.com/widgetembed/?widgetType=heatmap&market=stock&exchange=US&theme=dark"
-      style="width:100%;height:100%;border:none;">
-    </iframe>
-  </div>
-
-  <!-- NOTICIAS -->
-  <div class="panel">
-    <iframe
-      id="news"
-      style="width:100%;height:100%;border:none;">
-    </iframe>
-  </div>
 
   <!-- WATCHLIST -->
   <div class="panel">
@@ -92,29 +71,20 @@
 </div>
 
 <script>
-let currentSymbol = "AAPL";
-
 function loadSymbol(symbolFromClick) {
   const s = symbolFromClick
     ? symbolFromClick
     : document.getElementById("symbol").value.toUpperCase() || "AAPL";
 
-  currentSymbol = s;
   document.getElementById("symbol").value = s;
 
-  // 🔥 LIMPIAMOS COMPLETAMENTE EL GRÁFICO ANTES DE CARGAR
   const chartDiv = document.getElementById("chart");
-  chartDiv.innerHTML = "";
-
   chartDiv.innerHTML = `
     <iframe
       src="https://www.tradingview.com/widgetembed/?symbol=${s}&interval=D&theme=dark&style=1"
       style="width:100%;height:100%;border:none;">
     </iframe>
   `;
-
-  document.getElementById("news").src =
-    `https://www.tradingview.com/widgetembed/?widgetType=news&symbol=${s}&theme=dark`;
 
   addToWatchlist(s);
 }
@@ -141,9 +111,8 @@ function renderWatchlist() {
   });
 }
 
-// 🔥 CARGA INICIAL LIMPIA (UNA SOLA VEZ)
-loadSymbol("AAPL");
 renderWatchlist();
+loadSymbol("AAPL");
 </script>
 
 </body>
