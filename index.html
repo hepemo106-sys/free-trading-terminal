@@ -37,6 +37,9 @@
       padding: 5px;
       overflow: hidden;
     }
+    h3 {
+      margin: 5px 0;
+    }
     ul {
       list-style: none;
       padding: 0;
@@ -60,14 +63,19 @@
 </header>
 
 <div class="grid">
+
   <!-- GRÁFICO PRINCIPAL (ÚNICO) -->
   <div class="panel" id="chart"></div>
 
-  <!-- WATCHLIST -->
+  <!-- HEATMAP DEL MERCADO USA -->
   <div class="panel">
-    <h3>Watchlist</h3>
-    <ul id="list"></ul>
+    <h3>Market Heatmap</h3>
+    <iframe
+      src="https://www.tradingview.com/widgetembed/?widgetType=heatmap&market=stock&exchange=US&theme=dark"
+      style="width:100%;height:100%;border:none;">
+    </iframe>
   </div>
+
 </div>
 
 <script>
@@ -99,8 +107,16 @@ function addToWatchlist(symbol) {
 }
 
 function renderWatchlist() {
+  const existing = document.getElementById("watchlist");
+  if (existing) return;
+
+  const panel = document.createElement("div");
+  panel.className = "panel";
+  panel.id = "watchlist";
+  panel.innerHTML = "<h3>Watchlist</h3><ul id='list'></ul>";
+  document.body.appendChild(panel);
+
   const ul = document.getElementById("list");
-  ul.innerHTML = "";
   let list = JSON.parse(localStorage.getItem("watchlist") || "[]");
 
   list.forEach(s => {
@@ -111,7 +127,6 @@ function renderWatchlist() {
   });
 }
 
-renderWatchlist();
 loadSymbol("AAPL");
 </script>
 
