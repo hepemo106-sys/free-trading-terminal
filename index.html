@@ -42,17 +42,14 @@
       padding: 5px;
       overflow: hidden;
     }
-    h3 {
-      margin: 5px 0;
-    }
     ul {
       list-style: none;
       padding: 0;
       margin: 0;
     }
     li {
-      cursor: pointer;
       padding: 4px;
+      cursor: pointer;
     }
     li:hover {
       background: #1e2329;
@@ -68,7 +65,7 @@
 </header>
 
 <div class="grid">
-  <!-- GRÁFICO -->
+  <!-- GRÁFICO PRINCIPAL -->
   <div class="panel" id="chart"></div>
 
   <!-- HEATMAP -->
@@ -83,7 +80,6 @@
   <div class="panel">
     <iframe
       id="news"
-      src="https://www.tradingview.com/widgetembed/?widgetType=news&symbol=AAPL&theme=dark"
       style="width:100%;height:100%;border:none;">
     </iframe>
   </div>
@@ -98,12 +94,19 @@
 <script>
 let currentSymbol = "AAPL";
 
-function loadSymbol() {
-  const s = document.getElementById("symbol").value.toUpperCase();
-  if (!s) return;
-  currentSymbol = s;
+function loadSymbol(symbolFromClick) {
+  const s = symbolFromClick
+    ? symbolFromClick
+    : document.getElementById("symbol").value.toUpperCase() || "AAPL";
 
-  document.getElementById("chart").innerHTML = `
+  currentSymbol = s;
+  document.getElementById("symbol").value = s;
+
+  // 🔥 LIMPIAMOS COMPLETAMENTE EL GRÁFICO ANTES DE CARGAR
+  const chartDiv = document.getElementById("chart");
+  chartDiv.innerHTML = "";
+
+  chartDiv.innerHTML = `
     <iframe
       src="https://www.tradingview.com/widgetembed/?symbol=${s}&interval=D&theme=dark&style=1"
       style="width:100%;height:100%;border:none;">
@@ -133,16 +136,14 @@ function renderWatchlist() {
   list.forEach(s => {
     const li = document.createElement("li");
     li.textContent = s;
-    li.onclick = () => {
-      document.getElementById("symbol").value = s;
-      loadSymbol();
-    };
+    li.onclick = () => loadSymbol(s);
     ul.appendChild(li);
   });
 }
 
+// 🔥 CARGA INICIAL LIMPIA (UNA SOLA VEZ)
+loadSymbol("AAPL");
 renderWatchlist();
-loadSymbol();
 </script>
 
 </body>
