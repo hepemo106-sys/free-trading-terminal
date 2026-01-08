@@ -43,20 +43,21 @@
       height: calc(100vh - 100px);
       display: none;
       border-top: 1px solid #2b3139;
+      overflow-y: auto;
     }
     .panel.active {
       display: block;
     }
-    ul {
-      list-style: none;
+    .box {
       padding: 10px;
+      border-bottom: 1px solid #2b3139;
     }
-    li {
-      padding: 6px;
-      cursor: pointer;
+    h3 {
+      margin-top: 0;
     }
-    li:hover {
-      background: #1e2329;
+    a {
+      color: #4cafef;
+      text-decoration: none;
     }
   </style>
 </head>
@@ -69,84 +70,76 @@
 </header>
 
 <div class="tabs">
-  <button class="active" onclick="openTab('chart')">Chart</button>
-  <button onclick="openTab('watchlist')">Watchlist</button>
-  <button onclick="openTab('news')">News</button>
-  <button onclick="openTab('info')">Info</button>
+  <button class="active" onclick="openTab('chart', this)">Chart</button>
+  <button onclick="openTab('news', this)">News</button>
 </div>
 
 <div id="chart" class="panel active">
-  <iframe id="chartFrame"
-    style="width:100%;height:100%;border:none;">
-  </iframe>
-</div>
-
-<div id="watchlist" class="panel">
-  <ul id="list"></ul>
+  <iframe id="chartFrame" style="width:100%;height:100%;border:none;"></iframe>
 </div>
 
 <div id="news" class="panel">
-  <div id="newsContent" style="padding:10px;">
-    Próximamente noticias en texto.
-  </div>
-</div>
-
-<div id="info" class="panel">
-  <div id="infoContent" style="padding:10px;">
-    Información básica del activo.
+  <div class="box" id="marketStatus"></div>
+  <div class="box">
+    <h3>ForexFactory – Weekly News</h3>
+    <div id="newsContent">Cargando noticias...</div>
   </div>
 </div>
 
 <script>
-let currentSymbol = "AAPL";
-
+/* ===== GRÁFICO ===== */
 function loadSymbol() {
   const s = document.getElementById("symbol").value.toUpperCase() || "AAPL";
-  currentSymbol = s;
   document.getElementById("symbol").value = s;
-
   document.getElementById("chartFrame").src =
     `https://www.tradingview.com/widgetembed/?symbol=${s}&interval=D&theme=dark&style=1`;
-
-  addToWatchlist(s);
 }
+loadSymbol();
 
-function openTab(tab) {
+/* ===== TABS ===== */
+function openTab(tab, btn) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
-
   document.getElementById(tab).classList.add('active');
-  event.target.classList.add('active');
+  btn.classList.add('active');
 }
 
-function addToWatchlist(symbol) {
-  let list = JSON.parse(localStorage.getItem("watchlist") || "[]");
-  if (!list.includes(symbol)) {
-    list.push(symbol);
-    localStorage.setItem("watchlist", JSON.stringify(list));
-  }
-  renderWatchlist();
+/* ===== MERCADOS & ZONA HORARIA ===== */
+function updateMarketStatus() {
+  const now = new Date();
+  const utcHour = now.getUTCHours();
+  let market = "Cerrado";
+
+  if (utcHour >= 0 && utcHour < 8) market = "Asia 🌏";
+  else if (utcHour >= 8 && utcHour < 16) market = "Londres 🇬🇧";
+  else if (utcHour >= 13 && utcHour < 21) market = "New York 🇺🇸";
+
+  document.getElementById("marketStatus").innerHTML = `
+    <strong>Hora local:</strong> ${now.toLocaleTimeString()}<br>
+    <strong>Mercado activo:</strong> ${market}
+  `;
 }
+updateMarketStatus();
+setInterval(updateMarketStatus, 60000);
 
-function renderWatchlist() {
-  const ul = document.getElementById("list");
-  ul.innerHTML = "";
-  let list = JSON.parse(localStorage.getItem("watchlist") || "[]");
-
-  list.forEach(s => {
-    const li = document.createElement("li");
-    li.textContent = s;
-    li.onclick = () => {
-      document.getElementById("symbol").value = s;
-      loadSymbol();
-      openTab('chart');
-    };
-    ul.appendChild(li);
+/* ===== FOREXFACTORY NEWS (RSS → JSON) ===== */
+fetch("https://api.rss2json.com/v1/api.json?rss_url=https://www.forexfactory.com/rss.php")
+  .then(res => res.json())
+  .then(data => {
+    const container = document.getElementById("newsContent");
+    container.innerHTML = "";
+    data.items.slice(0, 10).forEach(item => {
+      container.innerHTML += `
+        <div style="margin-bottom:8px;">
+          • <a href="${item.link}" target="_blank">${item.title}</a>
+        </div>
+      `;
+    });
+  })
+  .catch(() => {
+    document.getElementById("newsContent").innerText =
+      "No se pudieron cargar las noticias.";
   });
-}
-
-loadSymbol();
-renderWatchlist();
 </script>
 
 </body>
