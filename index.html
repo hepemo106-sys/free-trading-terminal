@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Free Trading Terminal – Acciones USA</title>
+  <title>Free Trading Terminal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -15,8 +15,8 @@
       padding: 10px;
       background: #161a1e;
       display: flex;
-      align-items: center;
       gap: 10px;
+      align-items: center;
     }
     input, button {
       background: #0b0e11;
@@ -24,9 +24,8 @@
       border: 1px solid #2b3139;
       padding: 6px;
     }
-    button {
-      cursor: pointer;
-    }
+    button { cursor: pointer; }
+
     .tabs {
       display: flex;
       background: #161a1e;
@@ -39,22 +38,20 @@
     .tabs button.active {
       background: #1e2329;
     }
+
     .panel {
-      height: calc(100vh - 100px);
       display: none;
-      border-top: 1px solid #2b3139;
+      height: calc(100vh - 100px);
       overflow-y: auto;
+      border-top: 1px solid #2b3139;
     }
-    .panel.active {
-      display: block;
-    }
+    .panel.active { display: block; }
+
     .box {
       padding: 10px;
       border-bottom: 1px solid #2b3139;
     }
-    h3 {
-      margin-top: 0;
-    }
+
     a {
       color: #4cafef;
       text-decoration: none;
@@ -65,7 +62,7 @@
 
 <header>
   <strong>FREE TRADING TERMINAL</strong>
-  <input id="symbol" placeholder="AAPL" />
+  <input id="symbol" placeholder="AAPL">
   <button onclick="loadSymbol()">Cargar</button>
 </header>
 
@@ -79,7 +76,7 @@
 </div>
 
 <div id="news" class="panel">
-  <div class="box" id="marketStatus"></div>
+  <div class="box" id="timeBox"></div>
   <div class="box">
     <h3>ForexFactory – Weekly News</h3>
     <div id="newsContent">Cargando noticias...</div>
@@ -87,7 +84,7 @@
 </div>
 
 <script>
-/* ===== GRÁFICO ===== */
+/* ===== CHART ===== */
 function loadSymbol() {
   const s = document.getElementById("symbol").value.toUpperCase() || "AAPL";
   document.getElementById("symbol").value = s;
@@ -104,41 +101,46 @@ function openTab(tab, btn) {
   btn.classList.add('active');
 }
 
-/* ===== MERCADOS & ZONA HORARIA ===== */
-function updateMarketStatus() {
+/* ===== TIME + MARKET STATUS (REAL TIME) ===== */
+function updateTime() {
   const now = new Date();
-  const utcHour = now.getUTCHours();
+  const utc = now.getUTCHours();
   let market = "Cerrado";
 
-  if (utcHour >= 0 && utcHour < 8) market = "Asia 🌏";
-  else if (utcHour >= 8 && utcHour < 16) market = "Londres 🇬🇧";
-  else if (utcHour >= 13 && utcHour < 21) market = "New York 🇺🇸";
+  if (utc >= 0 && utc < 8) market = "Asia 🌏";
+  else if (utc >= 8 && utc < 16) market = "Londres 🇬🇧";
+  else if (utc >= 13 && utc < 21) market = "New York 🇺🇸";
 
-  document.getElementById("marketStatus").innerHTML = `
+  document.getElementById("timeBox").innerHTML = `
     <strong>Hora local:</strong> ${now.toLocaleTimeString()}<br>
+    <strong>Zona horaria:</strong> ${Intl.DateTimeFormat().resolvedOptions().timeZone}<br>
     <strong>Mercado activo:</strong> ${market}
   `;
 }
-updateMarketStatus();
-setInterval(updateMarketStatus, 60000);
+updateTime();
+setInterval(updateTime, 1000);
 
-/* ===== FOREXFACTORY NEWS (RSS → JSON) ===== */
-fetch("https://api.rss2json.com/v1/api.json?rss_url=https://www.forexfactory.com/rss.php")
+/* ===== FOREXFACTORY NEWS (FUNCIONA EN GITHUB PAGES) ===== */
+fetch("https://api.allorigins.win/get?url=" +
+  encodeURIComponent("https://www.forexfactory.com/rss.php"))
   .then(res => res.json())
   .then(data => {
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(data.contents, "text/xml");
+    const items = xml.querySelectorAll("item");
     const container = document.getElementById("newsContent");
     container.innerHTML = "";
-    data.items.slice(0, 10).forEach(item => {
-      container.innerHTML += `
-        <div style="margin-bottom:8px;">
-          • <a href="${item.link}" target="_blank">${item.title}</a>
-        </div>
-      `;
+
+    items.forEach((item, i) => {
+      if (i >= 10) return;
+      const title = item.querySelector("title").textContent;
+      const link = item.querySelector("link").textContent;
+      container.innerHTML += `• <a href="${link}" target="_blank">${title}</a><br>`;
     });
   })
   .catch(() => {
     document.getElementById("newsContent").innerText =
-      "No se pudieron cargar las noticias.";
+      "Error cargando ForexFactory.";
   });
 </script>
 
