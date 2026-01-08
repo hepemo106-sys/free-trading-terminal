@@ -78,7 +78,7 @@
 <div id="news" class="panel">
   <div class="box" id="timeBox"></div>
   <div class="box">
-    <h3>Market News</h3>
+    <h3>Market News (Yahoo Finance)</h3>
     <div id="newsContent">Cargando noticias...</div>
   </div>
 </div>
@@ -101,7 +101,7 @@ function openTab(tab, btn) {
   btn.classList.add('active');
 }
 
-/* ===== TIME + MARKET STATUS ===== */
+/* ===== TIME + MARKET ===== */
 function updateTime() {
   const now = new Date();
   const utc = now.getUTCHours();
@@ -120,42 +120,26 @@ function updateTime() {
 updateTime();
 setInterval(updateTime, 1000);
 
-/* ===== MARKET NEWS (ESTABLE) ===== */
-const feeds = [
-  "https://feeds.a.dj.com/rss/RSSMarketsMain.xml",        // Wall Street Journal / MarketWatch
-  "https://www.ft.com/rss/markets"                        // Financial Times
-];
+/* ===== YAHOO FINANCE RSS (SIN BLOQUEOS) ===== */
+fetch("https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC&region=US&lang=en-US")
+  .then(res => res.text())
+  .then(str => {
+    const xml = new DOMParser().parseFromString(str, "text/xml");
+    const items = xml.querySelectorAll("item");
+    const container = document.getElementById("newsContent");
+    container.innerHTML = "";
 
-async function loadNews() {
-  const container = document.getElementById("newsContent");
-  container.innerHTML = "";
-
-  for (let feed of feeds) {
-    try {
-      const res = await fetch(
-        "https://api.allorigins.win/get?url=" + encodeURIComponent(feed)
-      );
-      const data = await res.json();
-      const xml = new DOMParser().parseFromString(data.contents, "text/xml");
-      const items = xml.querySelectorAll("item");
-
-      items.forEach((item, i) => {
-        if (i >= 5) return;
-        const title = item.querySelector("title").textContent;
-        const link = item.querySelector("link").textContent;
-        container.innerHTML += `• <a href="${link}" target="_blank">${title}</a><br>`;
-      });
-    } catch (e) {
-      console.error("Feed error", e);
-    }
-  }
-
-  if (container.innerHTML === "") {
-    container.innerText = "No se pudieron cargar las noticias.";
-  }
-}
-
-loadNews();
+    items.forEach((item, i) => {
+      if (i >= 10) return;
+      const title = item.querySelector("title").textContent;
+      const link = item.querySelector("link").textContent;
+      container.innerHTML += `• <a href="${link}" target="_blank">${title}</a><br>`;
+    });
+  })
+  .catch(() => {
+    document.getElementById("newsContent").innerText =
+      "No se pudieron cargar las noticias.";
+  });
 </script>
 
 </body>
